@@ -5,3 +5,6 @@
 
 > SSD(Single Shot Detector)
 > MobileNet
+
+> ### jQuery animate-plugin
+> https://bitstorm.org/jquery/color-animation/
