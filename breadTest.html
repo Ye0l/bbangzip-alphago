@@ -204,11 +204,26 @@
     // POS부
     // ===================================================================================================
 
-    let load_json;
-    let price = [["plainBread", "1000"], ["Wandu", "1500"], ["Castella", "2000"]];
+    let price
     $(document).ready(function(){
-        load_json = $.getJSON('Bread_price.json');
-        console.log(load_json.responseJSON);
+        // $.getJSON('Bread_price.json', function(data) {
+        //     load_json = data;
+        // });
+        // console.log(load_json);
+        // getJSON은 async가 true이고 수정이 불가능하다고 한다.. 그러니까 데이터를 불러오기전에 console.log가 찍혀서 undefined가 뜨는거였음
+        $.ajax({
+            url: "Bread_price.json",
+            dataType: "json",
+            type: "GET",
+            async: false,
+            success: function(data) {
+                price = data;
+                $.each(data, function(key, value) {
+                    price[key] = Number(value);
+                })
+            }
+        })
+        console.log(price);
     });
     let list = [];
     function POSRefresh() {
@@ -230,11 +245,11 @@
     }
 
     function insertProduct(product) {
-        const item = [product, 1, price[product]];
+        const item = [product, price[product], 1];  
         for(var i of list) {
             if(i[0] === product) {
-                i[1]++;
-                i[2] = price[product] * i[1];
+                i[2]++;
+                i[1] = price[product] * i[2];
                 soundEffect.play();
                 POSRefresh();
                 return $(`#td_${product}_1`);
