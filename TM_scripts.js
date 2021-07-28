@@ -44,11 +44,6 @@ let prdVal = {};
 let predict_switch = true;
 let result_predict;
 
-function insertAnimation(target) {
-    target.css({borderTopColor: 'rgba(251, 206, 177)', borderLeftColor: 'rgba(251, 206, 177)', borderRightColor: 'rgba(251, 206, 177)', backgroundColor: 'rgba(255, 229, 211)'});
-    target.animate({borderTopColor: 'rgba(251, 206, 177, 0)', borderLeftColor: 'rgba(251, 206, 177, 0)', borderRightColor: 'rgba(251, 206, 177, 0)', backgroundColor: 'rgba(255, 229, 211, 0)'}, 1500);
-}
-
 async function v_loop() {
     v_webcam.update(); // update the v_webcam frame
     window.requestAnimationFrame(v_loop);
@@ -64,7 +59,9 @@ async function v_loop() {
                 result_predcit = prd;
                 prdVal = {};
                 predict_switch = false;
-                insertAnimation(insertProduct(prd));
+                // target = pos.currentOrder.addItem(pos.findProduct(prd));
+                // pos.showCurrentOrder();
+                pos.addOrderItem(prd);
             }
     } else {
         prdVal = {};
