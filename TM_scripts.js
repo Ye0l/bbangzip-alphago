@@ -33,6 +33,7 @@ async function v_init() {
     // append elements to the DOM
     document.getElementById("v_webcam-container").appendChild(v_webcam.canvas);
     document.getElementsByTagName('Canvas')[0].style.transform='rotate(90deg)';
+    document.getElementsByTagName('Canvas')[0].style.width='100%';
     v_labelContainer = document.getElementById("v_label-container");
     for (let i = 0; i < v_maxPredictions; i++) { // and class labels
         v_labelContainer.appendChild(document.createElement("div"));
@@ -151,7 +152,7 @@ async function init() {
             }
         }
         labelContainer.innerHTML = classLabels[a_index];
-        micInput(classLabels[a_index]);
+        mic.micInput(classLabels[a_index]);
         // if(classLabels[a_index] == 'play') {
         //     v_labelContainer.innerHTML = "";
         // }

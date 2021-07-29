@@ -28,6 +28,7 @@ class Order {
     addItem(product) {
             for (let i in this.items) {
                 if (product === this.items[i].product) {
+                    increaseBGM.play();
                     this.items[i].count++;
                     this.lastItemIndex = Number(i);
                     this.calculateTotal();
@@ -35,6 +36,7 @@ class Order {
                     // return this.lastItemIndex;
                 }
             }
+            insertBGM.play();
             this.items.push(new Item(product));
             this.lastItemIndex = this.items.length - 1;
             this.calculateTotal();
@@ -43,12 +45,13 @@ class Order {
         }
         //--------------------------------------------------------
     cancelLast() {
-        let id;
-        id = `.order_${this.items[this.lastItemIndex].product.name}`;
-        this.adjustItemCount(this.lastItemIndex, -1);
+        let id = `order_${this.items[this.lastItemIndex].product.name}`;
+        if(this.adjustItemCount(this.lastItemIndex, -1)) {
+            this.lastItemIndex = -1;
+            return '.'+id;
+        }
         this.lastItemIndex = -1;
-
-        return id;
+        return '#'+id;
     }
     //--------------------------------------------------------
     adjustItemCount(idx, amount) {
@@ -57,8 +60,11 @@ class Order {
                 if (this.items[idx].count <= 0) {
                     this.items.splice(idx, 1);
                     this.lastItemIndex = -1;
+                    this.calculateTotal();
+                    return false;
                 }
                 this.calculateTotal();
+                return true;
             }
         }
         //--------------------------------------------------------
@@ -175,35 +181,41 @@ class POSManager {
             let currentOrders = "";
             for(var i in this.currentOrder.items) {
                 currentOrders += `<tr id='order_${this.currentOrder.items[i].product.name}'>`;
-                currentOrders += "<td>";
+                currentOrders += "<td><div>";
                 currentOrders += this.currentOrder.items[i].product.name;
-                currentOrders += "</td>";
-                currentOrders += "<td>";
-                currentOrders += this.currentOrder.items[i].product.price;
-                currentOrders += "</td>";
-                currentOrders += `<td class='order_${this.currentOrder.items[i].product.name}'>`;
-                currentOrders += `<div id='minus_icon' style='display:inline-block;'><img src='./icons/minus.png' alt='Plus_icon' style='width: 30px; height: 30px;' onclick='btn_event("minus", ${i})'></div>`;
+                currentOrders += "</div></td>";
+                currentOrders += "<td><div>";
+                currentOrders += this.insertComma(this.currentOrder.items[i].product.price);
+                currentOrders += "</div></td>";
+                currentOrders += `<td class='order_${this.currentOrder.items[i].product.name}'><div>`;
+                currentOrders += `<div id='minus_icon' style='display:inline-block;'><img src='./icons/minus.png' alt='Plus_icon' style='width: 20px; height: 20px;' onclick='btn_event("minus", ${i})'></div>`;
                 currentOrders += "<div id='count' style='display:inline-block;'>";
                 currentOrders += "&nbsp" + this.currentOrder.items[i].count + "&nbsp";
                 currentOrders += "</div>";
-                currentOrders += `<div id='plus_icon' style='display:inline-block;'><img src='./icons/add.png' alt='Plus_icon' style='width: 30px; height: 30px;' onclick='btn_event("plus", ${i})'></div>`;
-                currentOrders += "</td>";
-                currentOrders += `<td class='order_${this.currentOrder.items[i].product.name}'>`;
-                currentOrders += this.currentOrder.items[i].total;
-                currentOrders += "</td>";
+                currentOrders += `<div id='plus_icon' style='display:inline-block;'><img src='./icons/add.png' alt='Plus_icon' style='width: 20px; height: 20px;' onclick='btn_event("plus", ${i})'></div>`;
+                currentOrders += "</div></td>";
+                currentOrders += `<td class='order_${this.currentOrder.items[i].product.name}'><div>`;
+                currentOrders += this.insertComma(this.currentOrder.items[i].total);
+                currentOrders += "</div></td>";
                 currentOrders += "</tr>";
             }
             this.target.innerHTML = currentOrders;
-            this.sumTarget.innerText = this.currentOrder.total;
+            this.sumTarget.innerText = this.insertComma(this.currentOrder.total);
         }
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     cancelLast() {
+        cancelBGM.play();
         let id;
             if (this.currentOrder) {
                 id = this.currentOrder.cancelLast();
-                this.showCurrentOrder();
+                console.log(id);
+                if(id[0] == '#')
+                    this.insertAnimation(id, callShowCurrentOrder);
+                else {
+                    this.showCurrentOrder();
+                    this.insertAnimation(id);
+                }
             }
-            this.insertAnimation($(id));
         }
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     showProducts() {
@@ -227,18 +239,26 @@ class POSManager {
         let id = this.currentOrder.addItem(this.findProduct(product));
         this.showCurrentOrder();
 
-        this.insertAnimation($(id));
+        this.insertAnimation(id);
     }
     setLastOrderCount(amount) {
         let id = this.currentOrder.setLastCount(amount);
         this.showCurrentOrder();
 
-        this.insertAnimation($(id));
+        this.insertAnimation(id);
     }
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    insertAnimation(target) {
-        target.css({borderTopColor: 'rgba(251, 206, 177)', borderLeftColor: 'rgba(251, 206, 177)', borderRightColor: 'rgba(251, 206, 177)', backgroundColor: 'rgba(255, 229, 211)'});
-        target.animate({borderTopColor: 'rgba(251, 206, 177, 0)', borderLeftColor: 'rgba(251, 206, 177, 0)', borderRightColor: 'rgba(251, 206, 177, 0)', backgroundColor: 'rgba(255, 229, 211, 0)'}, 1500);
+    insertAnimation(target_id, callbacks) {
+        let target = $(target_id);
+        let div = $(target_id + " > td > div");
+        if(callbacks !== undefined) {
+            div.slideUp('slow', callbacks);
+        } else {
+            div.hide();
+            div.slideDown();
+            target.css({borderTopColor: 'rgba(251, 206, 177)', borderLeftColor: 'rgba(251, 206, 177)', borderRightColor: 'rgba(251, 206, 177)', backgroundColor: 'rgba(255, 229, 211)'});
+            target.animate({borderTopColor: 'rgba(251, 206, 177, 0)', borderLeftColor: 'rgba(251, 206, 177, 0)', borderRightColor: 'rgba(251, 206, 177, 0)', backgroundColor: 'rgba(255, 229, 211, 0)'}, 1500);
+        }
     }
 
     getOrderItemCount(index) {
@@ -253,7 +273,29 @@ class POSManager {
         let id = this.currentOrder.setItemCount(index, count);
         this.showCurrentOrder();
 
-        this.insertAnimation($(id));
+        this.insertAnimation(id);
+    }
+    insertComma(value) {
+        var output = "";
+        for(var i=1;i <= String(value).length; i++) {
+            output = String(value)[String(value).length-i] + output;
+            if(Number.isInteger(i/3))
+                if(i != String(value).length) // 마지막 루프 체크.. 이부분이 없으니 "100,000"이 ",100,000"으로 나오더라 ...
+                    output = "," + output;
+        }
+        return output;
+    }
+    complete() {
+        $('.orderCard').slideUp('slow', function() {
+            $('#complete').slideDown('slow', function() {
+                setTimeout(function() {
+                    pos.newOrder;
+                    $('#complete').slideUp('slow', function() {
+                        $('.orderCard').slideDown();
+                    })
+                }, 1000);
+            });
+        });
     }
 }
 // let p1 = new Product('a', 100);
