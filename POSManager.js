@@ -20,11 +20,25 @@ class Order {
             this.total = 0;
             this.paid = 0;
             this.change = 0;
-            this.dateOrder = new Date();
+            this.dateOrder = new Date().toString();
             this.lastItemIndex = -1; //취소용
             this.lastItemCountChange = 0;
-        }
-        //--------------------------------------------------------
+    }
+    //--------------------------------------------------------
+    setOrderPaid(val) {
+        this.paid = val;
+        this.calculateChange();
+    }
+    getOrderPaid() {
+        return this.paid;
+    }
+    getOrderChange() {
+        return this.change;
+    }
+    calculateChange() {
+        this.change = this.paid - this.total;
+    }
+    //--------------------------------------------------------
     addItem(product) {
             for (let i in this.items) {
                 if (product === this.items[i].product) {
@@ -93,6 +107,7 @@ class Order {
                 item.total = item.product.price * item.count;
                 this.total += item.total;
             }
+            this.calculateChange();
         }
         //--------------------------------------------------------
 
@@ -159,9 +174,21 @@ class POSManager {
             if (this.currentOrder) {
                 this.currentOrder.lastItemIndex = -1;
                 this.orders.push(this.currentOrder);
+                this.addLocalStorage();
             }
             this.currentOrder = new Order();
         }
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    addLocalStorage() {
+        var orderObject = this.currentOrder;
+        localStorage[orderObject.dateOrder] = (JSON.stringify(orderObject));
+    }
+        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    loadLocalStorage() {
+        for(var i = 0; i < localStorage.length; i++) {
+            this.orders.push(JSON.parse(localStorage[localStorage.key(i)]));
+        }
+    }
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     addItem(name) {
             if (this.currentOrder === null)
@@ -201,6 +228,7 @@ class POSManager {
             }
             this.target.innerHTML = currentOrders;
             this.sumTarget.innerText = this.insertComma(this.currentOrder.total);
+            this.refreshPC();
         }
         //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     cancelLast() {
@@ -296,6 +324,22 @@ class POSManager {
                 }, 1000);
             });
         });
+    }
+    setCurrentOrderPaid(val) {
+        if(isNaN(val) === true) return 1;
+        if(Number(val) > 100000000) return 2;
+        this.currentOrder.setOrderPaid(Number(val));
+        this.refreshPC();
+    }
+    getCurrentOrderPaid() {
+        return this.currentOrder.getOrderPaid();
+    }
+    getCurrentOrderChange() {
+        return this.currentOrder.getOrderChange();
+    }
+    refreshPC() {
+        $('#paid')[0].innerHTML = this.insertComma(this.getCurrentOrderPaid());
+        $('#change')[0].innerHTML = this.insertComma(this.getCurrentOrderChange());
     }
 }
 // let p1 = new Product('a', 100);

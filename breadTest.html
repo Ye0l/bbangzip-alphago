@@ -98,8 +98,10 @@
                         return 5;
                     case "취소":
                         return -1;
-                    case "완료":
+                    case "완료": 
                         return 0;
+                    case "관리":
+                        return -2;
                 }
             }
 
@@ -114,9 +116,36 @@
                     pos.complete();
                     pos.newOrder();
                     callShowCurrentOrder();
+                } else if(value == -2) {
+                    var orderlist = '';
+                    for(var i of pos.orders) {
+                        orderlist += '<tr>';
+                        var productlist = "";
+                        for(var j of i.items) {
+                            productlist += j.product.price + " ";
+                            productlist += j.product.name;
+                            productlist += " * " + j.count + " ";
+                        }
+                        orderlist += `<td><div onclick="alert('${productlist}')">`;
+                        orderlist += i.dateOrder;
+                        orderlist += '</div<</td>';
+                        orderlist += '<td>';
+                        orderlist += pos.insertComma(i.total) + '원';
+                        orderlist += '</td>';
+                        orderlist += '</tr>';
+                    }
+                    $('#orders')[0].innerHTML = orderlist;
+                    $('#main').slideUp('slow', function() {
+                        $('#admin').slideDown();
+                    });
                 }
             }
             
+        }
+        function back() {
+            $('#admin').slideUp('slow', function() {
+                $('#main').slideDown();
+            });
         }
         function btn_event(type, index){
             let number = pos.getOrderItemCount(index);
@@ -145,64 +174,109 @@
             pos.readProducts('./TMClass.json');
             pos.targetIs($('#ordertable')[0], $('#sum')[0]);
             pos.newOrder();
+            pos.loadLocalStorage();
+            
+            window.onkeydown = function(key) {
+                if(pos.getCurrentOrderPaid() !== 0) {
+                    pos.setCurrentOrderPaid(pos.getCurrentOrderPaid() + key.key);
+                } else {
+                    pos.setCurrentOrderPaid(key.key);
+                }
+                if(key.code == "Backspace") {
+                    value = String(pos.getCurrentOrderPaid()).slice(0,-1);
+                    if(value !== "")
+                        pos.setCurrentOrderPaid(value);
+                    else pos.setCurrentOrderPaid(0);
+                }
+            }
         });
     </script>
+    <!-- 테스트 스크립트, 불필요시 제거 -->
+    <script src="./testmod.js"></script>
 </head>
 <body background="bread1.jpg">
     <br><br>
     <h1>BAKERY AI CASHIER</h1><br>
     <!-- Video -->
-    <div class="container">
+    <div class="container" id="main">
         <div class="row">
-        <div class="col-5">
-            <div class="card">
-                <div class="card-body">
-                    <button class="btn btn-outline-primary btn-block btn-sm" style="width: 100%;" id="v_startBtn" type="button" onclick="v_init()">Start</button>
-                    <div id="v_webcam-container"></div>
-                    <div id="v_label-container"></div>
-                    <div class="progress">
-                        <div id="v_progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="1" style="width: 0%"></div>
+            <div class="col-5">
+                <div class="card">
+                    <div class="card-body">
+                        <button class="btn btn-outline-primary btn-block btn-sm" style="width: 100%;" id="v_startBtn" type="button" onclick="v_init()">Start</button>
+                        <div id="v_webcam-container"></div>
+                        <div id="v_label-container"></div>
+                        <div class="progress">
+                            <div id="v_progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="1" style="width: 0%"></div>
+                        </div>
+            
+                        <!-- Audio -->
+                        <button class="btn btn-outline-primary btn-sm" style="width: 100%;" id="a_startBtn" type="button" onclick="init()">Start</button>
+                        <input id="mictype" type="text" class="form-control">
+                        <div id="label-container"></div>
                     </div>
-        
-                    <!-- Audio -->
-                    <button class="btn btn-outline-primary btn-sm" style="width: 100%;" id="a_startBtn" type="button" onclick="init()">Start</button>
-                    <input id="mictype" type="text" class="form-control">
-                    <div id="label-container"></div>
+                </div>
+            </div>
+            <div class="col-7" style="height: 100%;">
+                <div class="card">
+                    <div class="card-body orderCard">
+                        <p style="text-align: center;"><b>장바구니</b></p>
+                        <table class="table" style="text-align: center;">
+                            <thead>
+                                <tr>
+                                    <th style="width: 35%;">품목</th>
+                                    <th style="width: 15%;">단가</th>
+                                    <th style="width: 20%;">갯수</th>
+                                    <th style="width: 30%;">합계</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordertable">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-body orderCard">
+                        <table class="table">
+                            <tbody>
+                                <tr style="font-size: xx-large; font-weight: bold;">
+                                    <td style="width: 25%;">합계</td>
+                                    <td style="text-align: right;">
+                                        <span id="sum">0</span>원
+                                    </td>
+                                </tr>
+                                <tr style="font-size: large;">
+                                    <td style="width: 25%;">받은 돈</td>
+                                    <td style="text-align: right;">
+                                        <span id="paid">0</span>원
+                                    </td>
+                                </tr>
+                                <tr style="font-size: large; color: lightcoral;">
+                                    <td style="width: 25%;">거스름돈</td>
+                                    <td style="text-align: right;">
+                                        <span id="change">0</span>원
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="complete" style="font-size: 2em; text-align: center;">
+                        계산이 완료되었습니다.
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="col-7" style="height: 100%;">
-            <div class="card">
-                <div class="card-body orderCard">
-                    <p style="text-align: center;"><b>장바구니</b></p>
-                    <table class="table" style="text-align: center;">
-                        <thead>
-                            <tr>
-                                <th style="width: 35%;">품목</th>
-                                <th style="width: 15%;">단가</th>
-                                <th style="width: 20%;">갯수</th>
-                                <th style="width: 30%;">합계</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordertable">
-                        </tbody>
-                    </table>
-                </div>
-                <div class="card-body orderCard">
-                    <table class="table">
-                        <tbody>
-                            <tr style="font-size: xx-large;">
-                                <td style="width: 25%;">합계</td>
-                                <td style="text-align: right;">
-                                    <span id="sum">0</span>원
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="complete" style="font-size: 2em; text-align: center;">
-                    계산이 완료되었습니다.
-                </div>
+    </div>
+    <div class="container" id="admin" style="display: none;">
+        <div class="card">
+            <div class="card-body">
+                <table style="width: 100%; text-align: center;">
+                    <thead>
+                        <th style="width: 70%;">날짜</th>
+                        <th style="width: 30%;">금액</th>
+                    </thead>
+                    <tbody id="orders">
+                    </tbody>
+                </table>
+                <button class="btn btn-primary float-end" onclick="back()">Back</button>
             </div>
         </div>
     </div>
