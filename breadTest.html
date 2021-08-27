@@ -118,19 +118,19 @@
                     callShowCurrentOrder();
                 } else if(value == -2) {
                     var orderlist = '';
-                    for(var i of pos.orders) {
+                    for(var i in pos.orders) {
                         orderlist += '<tr>';
                         var productlist = "";
-                        for(var j of i.items) {
+                        for(var j of pos.orders[i].items) {
                             productlist += j.product.price + " ";
                             productlist += j.product.name;
                             productlist += " * " + j.count + " ";
                         }
-                        orderlist += `<td><div onclick="alert('${productlist}')">`;
-                        orderlist += i.dateOrder;
+                        orderlist += `<td><div onclick="sendPost('./phptest.php', ${i})">`;
+                        orderlist += pos.orders[i].dateOrder;
                         orderlist += '</div<</td>';
                         orderlist += '<td>';
-                        orderlist += pos.insertComma(i.total) + '원';
+                        orderlist += pos.insertComma(pos.orders[i].total) + '원';
                         orderlist += '</td>';
                         orderlist += '</tr>';
                     }
@@ -142,6 +142,56 @@
             }
             
         }
+
+        function sendPost(url, orderNo) {
+            order = pos.orders[orderNo];
+            var newWin = window.open('about:blank', 'test');
+            var form = document.createElement('form');
+            form.setAttribute('method', 'post');
+            form.setAttribute('action', url);
+            document.charset = 'utf-8';
+
+            var products = "";
+            products += "<table><thead style=text-align:left;><th>상품명</th><th>단가</th><th>수량</th><th>금액</th></thead><tbody>"
+            for(var prd of order['items']) {
+                products += '<tr>';
+                products += '<td>';
+                products += prd['product']['name'];
+                products += '</td>';
+                products += '<td>';
+                products += pos.insertComma(prd['product']['price']);
+                products += '</td>';
+                products += '<td>';
+                products += prd['count'];
+                products += '</td>';
+                products += '<td>';
+                products += pos.insertComma(prd['total']);
+                products += '</td>';
+                products += '</tr>';
+            }
+            products += "</tbody></table>"
+            
+            var hiddenField = document.createElement('input');
+            hiddenField.setAttribute('type', 'hidden');
+            hiddenField.setAttribute('name', 'date');
+            hiddenField.setAttribute('value', order['dateOrder'].slice(0, -20));
+            form.appendChild(hiddenField);
+            var hiddenField = document.createElement('input');
+            hiddenField.setAttribute('type', 'hidden');
+            hiddenField.setAttribute('name', 'product');
+            hiddenField.setAttribute('value', products);
+            form.appendChild(hiddenField);
+            var hiddenField = document.createElement('input');
+            hiddenField.setAttribute('type', 'hidden');
+            hiddenField.setAttribute('name', 'total');
+            hiddenField.setAttribute('value', pos.insertComma(order['total']));
+            form.appendChild(hiddenField);
+
+            document.body.appendChild(form);
+            form.target = 'test';
+            form.submit();
+        }
+
         function back() {
             $('#admin').slideUp('slow', function() {
                 $('#main').slideDown();
