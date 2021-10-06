@@ -45,7 +45,7 @@
 <body>
     <h2>DIT 베이커리 영수증</h2>
     부산진구 양정동 양지로 54<br>
-    <script>
+    <!-- <script>
         let today = new Date();
 
         let year = today.getFullYear();
@@ -53,32 +53,31 @@
         let date = today.getDate();
 
         document.write(year + '/' + month + '/' + date) 
-    </script><br><br><br>
+    </script><br><br><br> -->
+    <?php echo $_REQUEST['date'];?><br><br><br>
 
-    <div id="table">
+    <!-- <div id="table">
         <div class="row">
             <span class="cell col">구매내역</span>
             <span class="cell col">식빵</span>
             <span class="cell col">2</span> 
             <span class="cell col">2000</span> 
         </div> 
-    </div>
-    product <?php echo $_REQUEST['product'];?>
+    </div> -->
+    <?php echo $_REQUEST['product'];?>
     ===============================
     <div id="table">
         <div class="row">
             <span class="cell col">합계</span>
-            <span class="cell col">4000</span> 
+            <span class="cell col"><?php echo $_REQUEST['total'];?></span> 
         </div> 
     </div> 
-    total <?php echo $_REQUEST['total'];?>
     ===============================
     <div id="table">
         <div class="row">
             <span class="cell col"><strong>결제금액</strong></span>
-            <span class="cell col"><strong>4000</strong></span>
+            <span class="cell col"><strong><?php echo $_REQUEST['total'];?></strong></span>
         </div> 
-    </div>    
-    total <?php echo $_REQUEST['total'];?>
+    </div>
 </body>
 </html>
